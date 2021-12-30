@@ -1,4 +1,4 @@
-resource "aws_secretsmanager_secret" "rotation-example" {
+resource "aws_secretsmanager_secret" "example" {
   name                = var.secret_name
   rotation_lambda_arn = local.rotation_lambda_arn
 
