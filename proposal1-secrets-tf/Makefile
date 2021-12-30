@@ -7,4 +7,4 @@ help:
 
 deploy:  ## Deploy Terraform
 	@echo "Terraform Apply"
-	terraform apply --auto-approve
+	terraform apply --auto-approve -var-file env/terraform.tfvars

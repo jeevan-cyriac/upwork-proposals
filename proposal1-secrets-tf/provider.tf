@@ -1,4 +1,4 @@
 provider "aws" {
-  profile = "stage1"
+  profile = "stage-apptest1"
   region  = "us-east-1"
 }
