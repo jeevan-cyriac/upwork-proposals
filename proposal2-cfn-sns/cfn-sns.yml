@@ -1,0 +1,65 @@
+AWSTemplateFormatVersion: 2010-09-09
+Description: CloudFormation Template for SNS - upwork proposal
+Parameters:
+  SNSTopicEmailAddress:
+    Type: String
+    Description: Email Address subscribed on SNS Topic
+  ConnectConcurrentCallsThreshold:
+    Type: String
+    Description: Connect Concurrent Calls Threshold
+
+Resources:
+ # Create SNS topic to send email
+  VTTConnectSupportTopic:
+    Type: AWS::SNS::Topic
+    Properties:
+     Subscription: 
+       - Endpoint: !Ref SNSTopicEmailAddress
+         Protocol: "email"
+      TopicName: VTTConnectSupportTopic
+  
+  ConnectConcurrentCallsMaxReached:
+    Type: AWS::CloudWatch::Alarm
+
+ # Create CW log metric filter for 'ERROR' messages
+  ConnectCloudWatchLogsErrorFilter: 
+    Type: AWS::Logs::MetricFilter
+    DependsOn: VTTConnectSupportTopic
+    Properties: 
+      LogGroupName: 
+        Ref: VTTConnectSupportTopic
+      FilterPattern: 'ERROR' # TO BE DEFINED
+      MetricTransformations: 
+        - MetricValue: "1"
+          MetricNamespace: "error-messages"
+          MetricName: "LogMetrics"
+
+  # Create CloudWatch Alarm for Error found in Connect CloudWatch logs
+  ConnectCloudWatchLogsErrorAlarm:
+    Type: AWS::CloudWatch::Alarm
+    DependsOn: ConnectCloudWatchLogsErrorFilter
+    Properties:
+      AlarmName:  ConnectCloudWatchLogsError
+      AlarmDescription: "Error found in Connect CloudWatch logs"
+      AlarmActions: 
+      - !Ref VTTConnectSupportTopic
+      MetricName: "error-messages"
+      Namespace: LogMetrics
+      ComparisonOperator: GreaterThanOrEqualToThreshold
+      EvaluationPeriods: '1'
+      Period: '60'
+      Threshold: '1'
+      # TODO: futher alarm properties to be defined
+
+  # Create CloudWatch Alarm for ConcurrentCallsMaxReached
+  ConnectConcurrentCallsMaxReached:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmName:  ConnectConcurrentCallsMaxReached
+      AlarmDescription: "Connect is reporting that the Concurrent Calls has reached the threshold"
+      AlarmActions: 
+      - !Ref VTTConnectSupportTopic
+      MetricName: ConcurrentCalls
+      ComparisonOperator: GreaterThanOrEqualToThreshold
+      Threshold: !Ref ConnectConcurrentCallsThreshold
+      # TODO: futher alarm properties to be defined
