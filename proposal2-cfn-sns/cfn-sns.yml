@@ -7,6 +7,9 @@ Parameters:
   ConnectConcurrentCallsThreshold:
     Type: String
     Description: Connect Concurrent Calls Threshold
+  ConnectCloudWatchLogGroupName:
+    Type: String
+    Description: Connect CloudWatch LogGroup Name
 
 Resources:
  # Create SNS topic to send email
@@ -24,15 +27,15 @@ Resources:
  # Create CW log metric filter for 'ERROR' messages
   ConnectCloudWatchLogsErrorFilter: 
     Type: AWS::Logs::MetricFilter
-    DependsOn: VTTConnectSupportTopic
     Properties: 
       LogGroupName: 
-        Ref: VTTConnectSupportTopic
-      FilterPattern: 'ERROR' # TO BE DEFINED
+        Ref: ConnectCloudWatchLogGroupName
+      FilterPattern: 'ERROR'
       MetricTransformations: 
         - MetricValue: "1"
-          MetricNamespace: "error-messages"
-          MetricName: "LogMetrics"
+          MetricNamespace: LogErrorMessages
+          MetricName: LogErrorMessages
+      # TODO: Correct properties to be defined
 
   # Create CloudWatch Alarm for Error found in Connect CloudWatch logs
   ConnectCloudWatchLogsErrorAlarm:
@@ -43,8 +46,8 @@ Resources:
       AlarmDescription: "Error found in Connect CloudWatch logs"
       AlarmActions: 
       - !Ref VTTConnectSupportTopic
-      MetricName: "error-messages"
-      Namespace: LogMetrics
+      MetricName: ConnectCloudWatchLogsErrorFilter
+      Namespace: LogErrorMessages
       ComparisonOperator: GreaterThanOrEqualToThreshold
       EvaluationPeriods: '1'
       Period: '60'
